@@ -1,0 +1,66 @@
+@import 'https://fonts.googleapis.com/css?family=VT323';
+
+$light-grey: #e0e2f4;
+$grey: #aaaaaa;
+$blue: #0414a7;
+
+$base-font-size: 20px;
+$font-stack: 'VT323', monospace;
+
+.bsod {
+  color: $light-grey;
+  background: $blue;
+  font: normal #{$base-font-size}/1.25rem $font-stack;
+  padding-top: 10%;
+  height: 65vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  h1, h2, h3, h4, p, a {
+    color: $light-grey;
+    font-family: $font-stack;
+  }
+
+  h1 { font-size: 2.75rem; line-height: 1.05em; font-weight: normal; }
+  h2 { font-size: 2.25rem; line-height: 1.25em; font-weight: normal; }
+  h3 { font-size: 1.5rem; line-height: 1.25em; font-weight: lighter; }
+  h4 { font-size: 1.125rem; line-height: 1.2222em; font-weight: lighter; }
+
+  .container {
+    width: 100%;
+    margin: 0 ;
+    
+  }
+
+  .neg {
+    text-align: center;
+    color: $blue;
+
+    .bg {
+      background: $grey;
+      padding: 0 15px 2px 13px;
+    }
+  }
+
+  .title {
+    margin-bottom: 50px;
+  }
+
+  .nav {
+    margin-top: 30px;
+    text-align: center;
+
+    .link {
+      text-decoration: none;
+      padding: 0 2px 2px 8px;
+
+      &:hover,
+      &:focus {
+        background: $grey;
+        color: $blue;
+      }
+    }
+  }
+}
