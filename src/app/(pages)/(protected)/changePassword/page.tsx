@@ -1,155 +1,155 @@
-'use client'
-import { useFormik } from "formik";
-import { object, ref, string } from "yup";
-import axios from "axios";
-import toast from "react-hot-toast";
+"use client";
+
 import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "@/hooks/store.hook";
+import { useAppDispatch } from "@/hooks/store.hook";
 import { setToken } from "@/store/feature/user.slice";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
+const passwordRegex = /^(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
 
-interface ChangePasswordValues {
-    currentPassword: string,
-      password: string,
-      rePassword: string,
-}
-
-export default function ChangePassword() {
-  const dispatch = useAppDispatch()
-const { data: session } = useSession();
-  const token = session?.user?.accessToken as string | undefined;
-const router = useRouter()
-  const passwordRegex =
-    /^(?=.*?[a-z])(?=.*?[0-9]).{8,}$/
-
-  const schema = object({
-    currentPassword: string()
-      .required("Password is required")
-      .matches(
+// ✅ Zod schema
+const changePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(1, "Current password is required")
+      .regex(
         passwordRegex,
-        "Minimum eight characters, at least one lower case English constter, one number"
+        "Minimum eight characters, at least one lower case letter, one number"
       ),
-    password: string()
-      .required("Password is required")
-      .matches(
+    password: z
+      .string()
+      .min(1, "New password is required")
+      .regex(
         passwordRegex,
-        "Minimum eight characters, at least one lower case English constter, one number"
+        "Minimum eight characters, at least one lower case letter, one number"
       ),
-    rePassword: string()
-      .required("Confirm password is required")
-      .oneOf(
-        [ref("password")],
-        "Password & Confirm password should be the same"
-      ),
+    rePassword: z.string().min(1, "Confirm password is required"),
+  })
+  .refine((data) => data.password === data.rePassword, {
+    message: "Password & Confirm password should be the same",
+    path: ["rePassword"],
   });
 
-  async function handleSubmit(values:ChangePasswordValues) {
+type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
+
+export default function ChangePassword() {
+  const dispatch = useAppDispatch();
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ChangePasswordValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      password: "",
+      rePassword: "",
+    },
+  });
+
+  async function onSubmit(values: ChangePasswordValues) {
     const toastId = toast.loading("Waiting...");
     try {
-      const options = {
-        url: "https://ecommerce.routemisr.com/api/v1/users/changeMyPassword",
-        method: "PUT",
-        headers: {
-          token,
-        },
-        data: values,
-      };
+      const { data } = await axios.put(
+        "https://ecommerce.routemisr.com/api/v1/users/changeMyPassword",
+        values,
+        {
+          headers: {
+            token,
+          },
+        }
+      );
 
-      const { data } = await axios.request(options);
       if (data.message === "success") {
         toast.success(
-          "Your Password has been changed successfully, Try to signIn "
+          "Your Password has been changed successfully, Try to sign in."
         );
-       setTimeout(() => {
-  router.push('/login');
-  dispatch(setToken(null))
-  
-}, 1500);
+        reset();
+        setTimeout(() => {
+          router.push("/login");
+          dispatch(setToken(null));
+        }, 1500);
       }
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-    toast.error(error.response.data.message);}
-     
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       toast.dismiss(toastId);
     }
   }
 
-  const formik = useFormik<ChangePasswordValues>({
-    initialValues: {
-      currentPassword: "",
-      password: "",
-      rePassword: "",
-    },
-    validationSchema: schema,
-    onSubmit: handleSubmit,
-  });
-
   return (
-    <>
-      <section className="flex flex-col justify-center items-center min-h-[60vh] px-4 md:px-0">
-        <div className="flex flex-col justify-center items-center border-solid rounded-md shadow-md bg-gray-200 w-full md:w-1/2 ">
-          <h2 className="font-semibold text-gray-600 my-4">
-            Change Your Password
-          </h2>
+    <section className="flex flex-col justify-center items-center min-h-[60vh] px-4 md:px-0">
+      <div className="flex flex-col justify-center items-center border-solid rounded-md shadow-md bg-gray-200 w-full md:w-1/2 ">
+        <h2 className="font-semibold text-gray-600 my-4">
+          Change Your Password
+        </h2>
 
-          <form
-            className="w-3/4 flex justify-center flex-col space-y-4 mb-4"
-            onSubmit={formik.handleSubmit}
+        <form
+          className="w-3/4 flex justify-center flex-col space-y-4 mb-4"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="current-password">
+            <input
+              className="form-control"
+              type="password"
+              placeholder="Current password"
+              {...register("currentPassword")}
+            />
+            {errors.currentPassword && (
+              <p className="text-red-500 text-sm">
+                {errors.currentPassword.message}
+              </p>
+            )}
+          </div>
+
+          <div className="new-password">
+            <input
+              className="form-control"
+              type="password"
+              placeholder="New password"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm">{errors.password.message}</p>
+            )}
+          </div>
+
+          <div className="re-password">
+            <input
+              className="form-control"
+              type="password"
+              placeholder="Re-enter password"
+              {...register("rePassword")}
+            />
+            {errors.rePassword && (
+              <p className="text-red-500 text-sm">{errors.rePassword.message}</p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn bg-green-600 mb-4 cursor-pointer"
           >
-            <div className="current-password">
-              <input
-                className="form-control"
-                name="currentPassword"
-                type="password"
-                placeholder="Current password"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.currentPassword}
-              />
-              {formik.touched.currentPassword && formik.errors.currentPassword && (
-                <p className="text-red-500 text-sm">{formik.errors.currentPassword}</p>
-              )}
-            </div>
-
-            <div className="new-password">
-              <input
-                className="form-control"
-                name="password"
-                type="password"
-                placeholder="New password"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.password}
-              />
-              {formik.touched.password && formik.errors.password && (
-                <p className="text-red-500 text-sm">{formik.errors.password}</p>
-              )}
-            </div>
-
-            <div className="re-password">
-              <input
-                className="form-control"
-                name="rePassword"
-                type="password"
-                placeholder="Re-enter password"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.rePassword}
-              />
-              {formik.touched.rePassword && formik.errors.rePassword && (
-                <p className="text-red-500 text-sm">{formik.errors.rePassword}</p>
-              )}
-            </div>
-
-            <button type="submit" className="btn bg-green-600 mb-4 cursor-pointer">
-              Submit
-            </button>
-          </form>
-
-        </div>
-      </section>
-    </>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
+        </form>
+      </div>
+    </section>
   );
 }
