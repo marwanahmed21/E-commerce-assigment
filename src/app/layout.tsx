@@ -8,6 +8,7 @@ import { Toaster } from "react-hot-toast";
 import Providers from "@/components/Provider/Providers";
 import ReduxHydrator from "@/components/Provider/ReduxHydrator";
 import ClientOnly from "@/components/ClientOnly/ClientOnly";
+import AuthProvider from "@/components/Provider/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-blue-400`}
       >
+        <AuthProvider>
         <Providers>
         <ClientOnly><NavBar /></ClientOnly>
         <div className="container min-h-[65vh] pb-10 pt-20 mx-auto ">
@@ -42,6 +44,7 @@ export default function RootLayout({
         </div>
         </Providers>
         <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

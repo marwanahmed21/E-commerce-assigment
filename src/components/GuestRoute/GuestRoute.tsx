@@ -3,9 +3,10 @@ import { useAppSelector } from "@/hooks/store.hook";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
+import { useSession, signOut } from "next-auth/react";
 export default function GuestRoute({ children }: { children: ReactNode }) {
-  const token = useAppSelector((state) => state.userReducer.token);
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);

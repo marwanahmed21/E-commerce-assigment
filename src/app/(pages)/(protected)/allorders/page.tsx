@@ -8,10 +8,11 @@ import { jwtDecode } from "jwt-decode";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-
+import { useSession } from "next-auth/react";
 export default function Orders() {
   const [orders, setOrdes] = useState<Order[] | null>(null);
-  const token = useAppSelector((store) => store.userReducer.token);
+ const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
 
   // get user Orders
   async function getUserOrders() {

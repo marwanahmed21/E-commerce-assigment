@@ -1,34 +1,30 @@
 "use client";
 
-import { useAppSelector } from "@/hooks/store.hook";
-import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const token = useAppSelector((state) => state.userReducer.token);
+  const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [mounted, setMounted] = useState(false);
   const [redirected, setRedirected] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && !token && !redirected) {
+    if (status === "unauthenticated" && !redirected) {
       const toastId = toast.loading("Redirecting to login...");
-      setRedirected(true); // ✅ Prevent double redirect
+      setRedirected(true);
       router.replace("/login");
       setTimeout(() => {
         toast.dismiss(toastId);
       }, 1500);
     }
-  }, [mounted, token, redirected, router]);
+  }, [status, redirected, router]);
 
-  if (!mounted || !token) return null;
- 
+  if (status === "loading") return null; // prevent flicker
+
+  if (status === "unauthenticated") return null;
 
   return <>{children}</>;
 }

@@ -1,75 +1,84 @@
-'use client'
+"use client";
+
 import axios from "axios";
-import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { object, string } from "yup";
-interface ForgotPasswordFormValues {
-  email: string;
-}
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const forgotPasswordSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid Email"),
+});
+
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPassword() {
   const router = useRouter();
-  const schema = object({
-    email: string().required("Email is required").email("Invalid Email"),
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
   });
 
-  async function handleSubmit(values:ForgotPasswordFormValues) {
+  async function onSubmit(values: ForgotPasswordFormValues) {
     const toastId = toast.loading("Waiting ....");
     try {
-      const options = {
-        url: "https://ecommerce.routemisr.com/api/v1/auth/forgotPasswords",
-        method: "POST",
-        data: values,
-      };
-      const { data } = await axios.request(options);
+      const { data } = await axios.post(
+        "https://ecommerce.routemisr.com/api/v1/auth/forgotPasswords",
+        
+        values
+      );
+
       if (data.statusMsg === "success") {
-        toast.success("reset code sent successfully");
+        toast.success("Reset code sent successfully");
         setTimeout(() => {
           router.push("/resetCode");
         }, 2000);
-        console.log(data);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      toast.error("Something went wrong");
     } finally {
       toast.dismiss(toastId);
     }
   }
 
-  const formik = useFormik<ForgotPasswordFormValues>({
-    initialValues: {
-      email: "",
-    },
-    validationSchema: schema,
-    onSubmit: handleSubmit,
-  });
-
   return (
-    <>
-      <section className="flex flex-col justify-center items-center min-h-[60vh]">
-        <div className="flex flex-col justify-center items-center border-solid rounded-md shadow-md bg-green-200 w-1/2">
-          <h2 className="font-semibold my-4">Forgot Your Password</h2>
-          <form
-            className="w-3/4 flex justify-center flex-col"
-            onSubmit={formik.handleSubmit}
+    <section className="flex flex-col justify-center items-center min-h-[60vh]">
+      <div className="flex flex-col justify-center items-center border-solid rounded-md shadow-md bg-green-200 w-1/2 p-6">
+        <h2 className="font-semibold my-4">Forgot Your Password</h2>
+
+        <form
+          className="w-3/4 flex flex-col gap-4"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="email">
+            <input
+              className="form-control w-full"
+              type="email"
+              placeholder="Enter Your email"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                *{errors.email.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            className="btn bg-green-600 text-white rounded-md py-2 px-4"
+            type="submit"
+            disabled={isSubmitting}
           >
-            <div className="email mb-4">
-              <input
-                className="form-control"
-                type="email"
-                placeholder="Enter Your email"
-                onChange={formik.handleChange}
-                name="email"
-                value={formik.values.email}
-              />
-            </div>
-            <button className="btn bg-green-600  mb-4 " type="submit">
-              Send code
-            </button>
-          </form>
-        </div>
-      </section>
-    </>
+            {isSubmitting ? "Sending..." : "Send code"}
+          </button>
+        </form>
+      </div>
+    </section>
   );
 }

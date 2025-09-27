@@ -5,11 +5,12 @@ import { useAppDispatch, useAppSelector } from "@/hooks/store.hook";
 import { clearCart, getCartInfo } from "@/store/feature/cart.slice";
 import Link from "next/link";
 import { useEffect } from "react";
-
+import { useSession, signOut } from "next-auth/react";
 export default function Cart() {
   const cartInfo = useAppSelector((store) => store.cartReducer.cartInfo);
   const dispatch = useAppDispatch();
-  const token = useAppSelector((store) => store.userReducer.token);
+ const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
 
   useEffect(() => {
     if (token) {

@@ -6,10 +6,11 @@ import { getCartInfo } from "@/store/feature/cart.slice";
 import { getProducts } from "@/store/feature/products.slice";
 import { Product } from "@/types/products.types";
 import { useEffect, useState } from "react";
-
+import { useSession, signOut } from "next-auth/react";
 export default function Products() {
   const products = useAppSelector((store) => store.productsReducer.products);
-  const token = useAppSelector((store) => store.userReducer.token);
+const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
   const dispatch = useAppDispatch();
   const [searchValue, setSearchValue] = useState("");
   const [filterProducts, setFilterProducts] = useState<Product[] | null>(null);

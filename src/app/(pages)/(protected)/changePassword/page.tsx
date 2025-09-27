@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/store.hook";
 import { setToken } from "@/store/feature/user.slice";
-
+import { useSession, signOut } from "next-auth/react";
 
 
 interface ChangePasswordValues {
@@ -17,7 +17,8 @@ interface ChangePasswordValues {
 
 export default function ChangePassword() {
   const dispatch = useAppDispatch()
-const token = useAppSelector((store)=>store.userReducer.token)
+const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
 const router = useRouter()
   const passwordRegex =
     /^(?=.*?[a-z])(?=.*?[0-9]).{8,}$/

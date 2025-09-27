@@ -13,7 +13,7 @@ import "swiper/css";
 import { addProductToCart } from "@/store/feature/cart.slice";
 import RelatedProductsSkeleton from "@/components/RelatedProductsSkeleton/RelatedProductsSkeleton";
 import ProductSkeleton from "@/components/ProductSkeleton/ProductSkeleton";
-
+import { useSession, signOut } from "next-auth/react";
 type Params = {
     productId: string;
 };
@@ -28,7 +28,8 @@ export default function ProductDetails() {
         (store) => store.productsReducer.relatedProducts
     );
 
-    const token = useAppSelector((store)=> store.userReducer.token)
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
 
 
     useEffect(() => {

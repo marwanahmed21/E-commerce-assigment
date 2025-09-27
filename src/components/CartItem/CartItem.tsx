@@ -3,9 +3,10 @@ import { removeItemFromCart, updateProductCount } from "@/store/feature/cart.sli
 import { CartProductItem } from "@/types/cartInfo.types";
 import Image from "next/image";
 import Link from "next/link";
-
+import { useSession, signOut } from "next-auth/react";
 export default function CartItem({cartInfo}:{cartInfo:CartProductItem}) {
-  const token = useAppSelector((store)=>store.userReducer.token)
+ const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
     const dispatch = useAppDispatch()
   return (
     <>

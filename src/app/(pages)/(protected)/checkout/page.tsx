@@ -5,10 +5,11 @@ import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-
+import { useSession, signOut } from "next-auth/react";
 export default function CheckOut() {
   const cartInfo = useAppSelector((store) => store.cartReducer.cartInfo);
-  const token = useAppSelector((store) => store.userReducer.token);
+ const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
   const router = useRouter();
 
   async function createOrder(values: {

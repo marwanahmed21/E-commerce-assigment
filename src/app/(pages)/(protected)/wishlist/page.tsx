@@ -5,9 +5,10 @@ import { getWishListInfo, removeProductFromWishList } from "@/store/feature/wish
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect } from "react"
-
+import { useSession, signOut } from "next-auth/react";
 export default function WishList() {
-    const token = useAppSelector((store)=> store.userReducer.token)
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
     const dispatch = useAppDispatch()
     const wishList = useAppSelector((store)=> store.wishListReducer.wishListInfo)
 

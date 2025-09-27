@@ -9,10 +9,11 @@ import {
 import { Product } from "@/types/products.types";
 import Image from "next/image";
 import Link from "next/link";
-
+import { useSession, signOut } from "next-auth/react";
 export default function Card({ productInfo }: { productInfo: Product }) {
   const dispatch = useAppDispatch();
-  const token = useAppSelector((store) => store.userReducer.token);
+const { data: session } = useSession();
+  const token = session?.user?.accessToken as string | undefined;
   const wishList = useAppSelector(
     (store) => store.wishListReducer.wishListInfo
   );

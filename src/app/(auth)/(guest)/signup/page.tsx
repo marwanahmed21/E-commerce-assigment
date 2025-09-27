@@ -1,167 +1,131 @@
-'use client'
+"use client";
+
 import axios from "axios";
-import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { object, ref, string } from "yup";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-
-interface SignUpFormValues {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  rePassword: string;
-}
+import { signUpSchema, type SignUpValues } from "@/schemas/signup.schema";
 
 export default function SignUp() {
   const router = useRouter();
-  const [accountError, setAccountError] = useState(null);
+  const [accountError, setAccountError] = useState<string | null>(null);
 
-  const phoneRegex = /^(02)?01[0125][0-9]{8}$/;
-
-  const schema = object({
-    name: string()
-      .required("Name is required")
-      .min(3, "Must be atleast 3 character")
-      .max(20, "Must be less than 20 character"),
-    email: string().required("Email is required").email("Invalid Email"),
-    phone: string()
-      .required("Phone is required")
-      .matches(phoneRegex, "sorry, we only accept Egyptian phone number"),
-    password: string()
-      .required("Password is required").min(8,'Must be atleast 8 character').max(20,'Must be less than 20 character'),
-    rePassword: string()
-      .required("Confirm password is required")
-      .oneOf(
-        [ref("password")],
-        "Password & Confirm password should be the same"
-      ),
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpValues>({
+    resolver: zodResolver(signUpSchema),
   });
 
-  async function handleSubmit(values:SignUpFormValues) {
-    const loadingId = toast.loading("Waiting");
+  const onSubmit = async (values: SignUpValues) => {
+    const loadingId = toast.loading("Waiting...");
     try {
-      const options = {
-        url: "https://ecommerce.routemisr.com/api/v1/auth/signup",
-        method: "POST",
-        data: values,
-      };
-      const { data } = await axios.request(options);
+      const { data } = await axios.post(
+        "https://ecommerce.routemisr.com/api/v1/auth/signup",
+        values
+      );
+
       if (data.message === "success") {
         toast.success("User created successfully");
         setTimeout(() => {
           router.push("/login");
         }, 2000);
       }
-    } catch (error) {
-  if (axios.isAxiosError(error) && error.response) {
-    toast.error(error.response.data.message);
-    setAccountError(error.response.data.message);
-  } else {
-    toast.error("Something went wrong");
-  }} finally {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data.message);
+        setAccountError(error.response.data.message);
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally {
       toast.dismiss(loadingId);
     }
-  }
-  const formik = useFormik<SignUpFormValues>({
-    initialValues: {
-      name: "",
-      email: "",
-      password: "",
-      rePassword: "",
-      phone: "",
-    },
-    validationSchema: schema,
-    onSubmit: handleSubmit,
-  });
+  };
+
   return (
     <>
       <h2 className="my-5 text-center md:text-start">Register Now :</h2>
-      <form className="space-y-6 mx-auto w-3/4 md:w-full" onSubmit={formik.handleSubmit}>
+      <form
+        className="space-y-6 mx-auto w-3/4 md:w-full"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        {/* Name */}
         <div className="name">
           <input
             className="w-full form-control"
             type="text"
             placeholder="Enter Your Name"
-            id="name"
-            name="name"
-            value={formik.values.name}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
+            {...register("name")}
           />
-          {formik.errors.name && formik.touched.name && (
-            <p className="text-red-400 mt-1 text-sm">*{formik.errors.name}</p>
+          {errors.name && (
+            <p className="text-red-400 mt-1 text-sm">*{errors.name.message}</p>
           )}
         </div>
+
+        {/* Email */}
         <div className="email">
           <input
             className="w-full form-control"
             type="email"
             placeholder="Enter Your email"
-            id="email"
-            name="email"
-            value={formik.values.email}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
+            {...register("email")}
           />
-          {formik.errors.email && formik.touched.email && (
-            <p className="text-red-400 mt-1 text-sm">*{formik.errors.email}</p>
+          {errors.email && (
+            <p className="text-red-400 mt-1 text-sm">*{errors.email.message}</p>
           )}
           {accountError && (
             <p className="text-red-400 mt-1 text-sm">*{accountError}</p>
           )}
         </div>
+
+        {/* Phone */}
         <div className="phone">
           <input
             className="w-full form-control"
             type="tel"
             placeholder="Enter Your mobile number"
-            id="phone"
-            name="phone"
-            value={formik.values.phone}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
+            {...register("phone")}
           />
-          {formik.errors.phone && formik.touched.phone && (
-            <p className="text-red-400 mt-1 text-sm">*{formik.errors.phone}</p>
+          {errors.phone && (
+            <p className="text-red-400 mt-1 text-sm">*{errors.phone.message}</p>
           )}
         </div>
+
+        {/* Password */}
         <div className="password">
           <input
             className="w-full form-control"
             type="password"
             placeholder="Enter Your Password"
-            id="password"
-            name="password"
-            value={formik.values.password}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
+            {...register("password")}
           />
-          {formik.errors.password && formik.touched.password && (
+          {errors.password && (
             <p className="text-red-400 mt-1 text-sm">
-              *{formik.errors.password}
+              *{errors.password.message}
             </p>
           )}
         </div>
+
+        {/* Confirm Password */}
         <div className="rePassword">
           <input
             className="w-full form-control"
             type="password"
-            placeholder="Enter Your repassword"
-            id="rePassword"
-            name="rePassword"
-            value={formik.values.rePassword}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
+            placeholder="Confirm your Password"
+            {...register("rePassword")}
           />
-          {formik.errors.rePassword && formik.touched.rePassword && (
+          {errors.rePassword && (
             <p className="text-red-400 mt-1 text-sm">
-              *{formik.errors.rePassword}
+              *{errors.rePassword.message}
             </p>
           )}
         </div>
+
         <button
           className="flex ml-auto py-2 px-3 bg-blue-400 text-white rounded-md"
           type="submit"
